@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model accesslogs {
+  id          Int                     @id @default(autoincrement())
+  user_id     Int?
+  visit_id    Int?
+  access_type accesslogs_access_type?
+  timestamp   DateTime?               @default(now()) @db.Timestamp(0)
+  ip_address  String?                 @db.VarChar(45)
+
+  @@index([user_id], map: "user_id")
+  @@index([visit_id], map: "visit_id")
+}
+
+model auditlogs {
+  id        Int       @id @default(autoincrement())
+  user_id   Int?
+  action    String?   @db.VarChar(255)
+  timestamp DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([timestamp], map: "timestamp")
+  @@index([user_id], map: "user_id")
+}
+
+model loginattempts {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  success    Boolean?
+  timestamp  DateTime? @default(now()) @db.Timestamp(0)
+  ip_address String?   @db.VarChar(45)
+  user_agent String?   @db.Text
+
+  @@index([timestamp], map: "timestamp")
+  @@index([user_id], map: "user_id")
+}
+
+model notifications {
+  id                Int                              @id @default(autoincrement())
+  user_id           Int?
+  visit_id          Int?
+  notification_type notifications_notification_type?
+  sent_at           DateTime?                        @default(now()) @db.Timestamp(0)
+  read_at           DateTime?                        @db.Timestamp(0)
+
+  @@index([user_id], map: "user_id")
+  @@index([visit_id], map: "visit_id")
+}
+
+model roles {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(50)
+}
+
+model sessiontokens {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  device_id     String    @db.VarChar(255)
+  token         String    @db.VarChar(255)
+  refresh_token String    @db.VarChar(255)
+  expires_at    DateTime  @db.Timestamp(0)
+  last_used_at  DateTime? @db.Timestamp(0)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([device_id], map: "device_id")
+  @@index([user_id], map: "user_id")
+}
+
+model users {
+  id                   Int       @id @default(autoincrement())
+  role_id              Int?
+  name                 String    @db.VarChar(100)
+  email                String    @unique(map: "email") @db.VarChar(100)
+  password             String    @db.VarChar(100)
+  phone                String?   @db.VarChar(20)
+  email_verified       Boolean?  @default(false)
+  login_attempts       Int?      @default(0)
+  account_locked_until DateTime? @db.Timestamp(0)
+  created_at           DateTime? @default(now()) @db.Timestamp(0)
+  updated_at           DateTime? @default(now()) @db.Timestamp(0)
+  created_by           Int?
+  updated_by           Int?
+
+  @@index([email], map: "email_2")
+  @@index([role_id], map: "role_id")
+}
+
+model visits {
+  id              Int            @id @default(autoincrement())
+  visitor_name    String         @db.VarChar(100)
+  visitor_company String?        @db.VarChar(100)
+  visit_reason    String?        @db.VarChar(255)
+  visit_material  String?        @db.VarChar(255)
+  vehicle         Boolean?       @default(false)
+  vehicle_model   String?        @db.VarChar(100)
+  vehicle_plate   String?        @db.VarChar(20)
+  visit_date      DateTime?      @default(now()) @db.Timestamp(0)
+  user_id         Int?
+  status          visits_status? @default(pending)
+  created_at      DateTime?      @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?      @default(now()) @db.Timestamp(0)
+
+  @@index([user_id], map: "user_id")
+  @@index([visit_date], map: "visit_date")
+}
+
+enum accesslogs_access_type {
+  check_in  @map("check-in")
+  check_out @map("check-out")
+}
+
+enum notifications_notification_type {
+  check_in  @map("check-in")
+  check_out @map("check-out")
+}
+
+enum visits_status {
+  pending
+  in_progress
+  completed
+}
