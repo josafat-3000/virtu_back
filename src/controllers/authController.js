@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import prisma from '@prisma/client';
-import generateToken from '../utils/generateToken.js';
+import {generateToken} from '../utils/generateToken.js';
 
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
@@ -26,19 +26,23 @@ export const register = async (req, res) => {
     }
 };
 
-export const login = async (req, res) => {
-    const { email, password } = req.body;
 
-    try {
-        const user = await prismaClient.user.findUnique({ where: { email } });
-
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(400).send({ error: 'Invalid login credentials' });
-        }
-
-        const token = generateToken(user);
-        res.send({ user, token });
-    } catch (error) {
-        res.status(400).send({ error: 'Error logging in' });
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return res.status(401).send('Invalid credentials');
     }
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.json({ token });
+  } catch (error) {
+    res.status(500).send('Server error');
+  }
 };
