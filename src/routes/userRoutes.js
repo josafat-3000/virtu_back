@@ -1,8 +1,9 @@
 // src/routes/userRoutes.js
 import { Router } from 'express';
 const router = Router();
-import roleMiddleware from '../middleware/roleMiddleware.js';
+import roleMiddleware from '../middlewares/roleMiddleware.js';
 import * as userController from '../controllers/userController.js';
+import * as authController from '../controllers/authController.js';
 
 // Routes accessible by 'admin' and 'user' roles
 router.get('/profile', roleMiddleware(['user', 'admin']), userController.getUserProfile);
@@ -17,7 +18,7 @@ router.get('/visits', roleMiddleware(['security_guard']), userController.getAllV
 router.put('/validate-visit/:id', roleMiddleware(['security_guard']), userController.validateVisit);
 
 // Public routes
-router.post('/register', userController.registerUser);
-router.post('/login', userController.loginUser);
+router.post('/register', authController.register);
+router.post('/login', authController.loginUser);
 
 export default router;

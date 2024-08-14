@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'; // Ensure this import is present
 import prisma from '@prisma/client';
-import {generateToken} from '../utils/generateToken.js';
+import { generateToken } from '../utils/generateToken.js';
 
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
@@ -10,7 +11,7 @@ export const register = async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 8);
-        const user = await prismaClient.user.create({
+        const user = await prismaClient.users.create({ // Ensure 'users' is the correct model name
             data: {
                 name,
                 email,
@@ -23,19 +24,19 @@ export const register = async (req, res) => {
         res.status(201).send({ user, token });
     } catch (error) {
         res.status(400).send({ error: 'Error registering user' });
+        console.error(error);
     }
 };
-
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prismaClient.users.findUnique({ where: { email } }); // Ensure 'users' is the correct model name
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.status(401).send('Invalid credentials');
     }
 
-    const token = jwt.sign(
+    const token = jwt.sign( // Use the jwt object
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
@@ -44,5 +45,6 @@ export const loginUser = async (req, res) => {
     res.json({ token });
   } catch (error) {
     res.status(500).send('Server error');
+    console.error(error);
   }
 };
