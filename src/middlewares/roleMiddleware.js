@@ -12,7 +12,6 @@ const roleMiddleware = (allowedRoles) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
       if (!allowedRoles.includes(decoded.role)) {
         return res.status(403).send('Insufficient permissions');
       }

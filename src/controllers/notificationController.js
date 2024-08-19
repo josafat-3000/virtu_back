@@ -9,7 +9,7 @@ export const createNotification = async (req, res) => {
     const user_id = req.user.id; // Assume user ID is available from authentication middleware
 
     try {
-        const notification = await prismaClient.notification.create({
+        const notification = await prismaClient.notifications.create({
             data: {
                 user_id,
                 visit_id,
@@ -26,7 +26,7 @@ export const createNotification = async (req, res) => {
 // Get all notifications for a user
 export const getNotifications = async (req, res) => {
     try {
-        const notifications = await prismaClient.notification.findMany({
+        const notifications = await prismaClient.notifications.findMany({
             where: { user_id: req.user.id },
             include: { visit: true }, // Include visit details if needed
         });
@@ -42,7 +42,7 @@ export const getNotificationById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const notification = await prismaClient.notification.findUnique({
+        const notification = await prismaClient.notifications.findUnique({
             where: { id: parseInt(id, 10) },
             include: { visit: true }, // Include visit details if needed
         });
@@ -63,7 +63,7 @@ export const updateNotificationStatus = async (req, res) => {
     const { read_at } = req.body;
 
     try {
-        const notification = await prismaClient.notification.update({
+        const notification = await prismaClient.notifications.update({
             where: { id: parseInt(id, 10) },
             data: { read_at },
         });

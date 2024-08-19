@@ -14,19 +14,20 @@ export const authMiddleware = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await prismaClient.user.findUnique({
+        const user = await prismaClient.users.findUnique({
             where: { id: decoded.id },
-            include: { role: { include: { actions: true } } }
+            include: {
+                Roles: true, // Incluye la relación con el modelo Roles
+              }
         });
 
         if (!user) {
             throw new Error();
         }
-
         req.user = user;
         next();
     } catch (e) {
-        res.status(401).send({ error: 'Please authenticate.' });
+        res.status(401).send({e:e.message });
     }
 };
 

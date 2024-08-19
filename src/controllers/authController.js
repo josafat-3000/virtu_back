@@ -7,7 +7,7 @@ const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 
 export const register = async (req, res) => {
-    const { name, email, password, role_id } = req.body;
+    const { name, email, password, role_id} = req.body;
 
     try {
         const hashedPassword = await bcrypt.hash(password, 8);
@@ -28,7 +28,7 @@ export const register = async (req, res) => {
           maxAge: 3600000 // 1 hora
         });
     
-        res.status(201).json({ name: user.name, role: user.role_id });
+        res.status(201).json({ name: user.name, role: user.role_id, id: user.id });
     } catch (error) {
         res.status(400).send({ error: 'Error registering user' });
         console.error(error);
@@ -43,11 +43,7 @@ export const loginUser = async (req, res) => {
       return res.status(401).send('Invalid credentials');
     }
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    const token = generateToken(user);
 
     res.cookie('token', token, {
       httpOnly: true, // Previene el acceso desde JavaScript
@@ -56,7 +52,7 @@ export const loginUser = async (req, res) => {
       maxAge: 3600000 // 1 hora
     });
 
-    res.status(200).json({ name: user.name, role: user.role_id});
+    res.status(200).json({ name: user.name, role: user.role_id, id: user.id });
   } catch (error) {
     res.status(500).send('Server error');
     console.error(error);

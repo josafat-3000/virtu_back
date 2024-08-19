@@ -1,7 +1,7 @@
 // src/roles.js
 export const roles = {
-    USER: 'user',
-    ADMIN: 'admin',
-    SECURITY_GUARD: 'security_guard'
+    USER: 3,
+    ADMIN: 1,
+    SECURITY_GUARD: 2
   };
   
