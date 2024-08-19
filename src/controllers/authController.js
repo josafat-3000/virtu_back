@@ -21,7 +21,14 @@ export const register = async (req, res) => {
         });
 
         const token = generateToken(user);
-        res.status(201).send({ user, token });
+        res.cookie('token', token, {
+          httpOnly: true, // Previene el acceso desde JavaScript
+          secure: process.env.NODE_ENV === 'production', // Solo se envía por HTTPS en producción
+          sameSite: 'strict', // Previene ataques CSRF
+          maxAge: 3600000 // 1 hora
+        });
+    
+        res.status(201).json({ name: user.name, role: user.role_id });
     } catch (error) {
         res.status(400).send({ error: 'Error registering user' });
         console.error(error);
@@ -31,20 +38,38 @@ export const register = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await prismaClient.users.findUnique({ where: { email } }); // Ensure 'users' is the correct model name
+    const user = await prismaClient.users.findUnique({ where: { email } });
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.status(401).send('Invalid credentials');
     }
 
-    const token = jwt.sign( // Use the jwt object
+    const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    res.json({ token });
+    res.cookie('token', token, {
+      httpOnly: true, // Previene el acceso desde JavaScript
+      secure: process.env.NODE_ENV === 'production', // Solo se envía por HTTPS en producción
+      sameSite: 'strict', // Previene ataques CSRF
+      maxAge: 3600000 // 1 hora
+    });
+
+    res.status(200).json({ name: user.name, role: user.role_id});
   } catch (error) {
     res.status(500).send('Server error');
     console.error(error);
   }
+};
+
+// src/controllers/authController.js
+export const logoutUser = (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 0
+  });
+  res.status(200).send('Logout successful');
 };

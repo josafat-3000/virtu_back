@@ -1,11 +1,12 @@
 import jwt from 'jsonwebtoken';
 import prisma from '@prisma/client';
 
+
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 
-const authMiddleware = async (req, res, next) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+export const authMiddleware = async (req, res, next) => {
+    const token = req.cookies.token; // Obtener el token de la cookie
 
     if (!token) {
         return res.status(401).send({ error: 'Please authenticate.' });
