@@ -30,7 +30,7 @@ export const register = async (req, res) => {
     
         res.status(201).json({ name: user.name, role: user.role_id, id: user.id });
     } catch (error) {
-        res.status(400).send({ error: 'Error registering user' });
+        res.status(400).send({ error: 'Error registering user', err: `${error}` });
         console.error(error);
     }
 };
