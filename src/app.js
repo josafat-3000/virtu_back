@@ -19,7 +19,6 @@ const corsOptions = {
   
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use(morgan('dev'));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/visits', visitRoutes);
