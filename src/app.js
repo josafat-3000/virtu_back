@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import visitRoutes from './routes/visitRoutes.js';
+import accessLogsRoutes from './routes/accesLogRoutes.js'
 import cookieParser from 'cookie-parser';
 import morgan from'morgan';
 import cors from 'cors';
@@ -22,5 +23,6 @@ app.use(morgan('dev'));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/visits', visitRoutes);
+app.use('/api/v1/accesslogs', accessLogsRoutes);
 
 export default app;

@@ -29,10 +29,7 @@ export const createVisit = async (req, res) => {
 
 export const getVisits = async (req, res) => {
     try {
-        const visits = await prismaClient.visits.findMany({
-            where: { user_id: req.user.id },
-        });
-
+        const visits = await prismaClient.visits.findMany();
         res.send(visits);
     } catch (error) {
         res.status(500).send({ error: 'Error fetching visits' });
@@ -88,8 +85,6 @@ export const contVisit = async (req, res) => {
                 },
             },
         });
-
-        console.log('Visit counts:', visitCounts);
 
         // Formateamos la respuesta para que sea más clara
         const response = {
