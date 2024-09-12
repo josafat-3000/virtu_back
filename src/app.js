@@ -2,9 +2,11 @@ import express from 'express';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import visitRoutes from './routes/visitRoutes.js';
-import accessLogsRoutes from './routes/accesLogRoutes.js'
+import accessLogsRoutes from './routes/accesLogRoutes.js';
+import uploadFilesRoutes from './routes/docsRoutes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import morgan from 'morgan';
 
 const app = express();
 
@@ -15,12 +17,14 @@ const corsOptions = {
     credentials: true, // Permite enviar cookies desde el frontend
     optionsSuccessStatus: 200
 };
-  
+app.use(morgan('dev'))
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/visits', visitRoutes);
 app.use('/api/v1/accesslogs', accessLogsRoutes);
+app.use('/api/v1/docs', uploadFilesRoutes);
+
 
 export default app;

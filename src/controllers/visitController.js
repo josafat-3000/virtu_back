@@ -56,19 +56,44 @@ export const getVisitById = async (req, res) => {
 
 export const updateVisitStatus = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
 
     try {
-        const visit = await prismaClient.visits.update({
+        // Obtener la visita actual
+        const visit = await prismaClient.visits.findUnique({
             where: { id: parseInt(id, 10) },
-            data: { status, updated_at: new Date() },
+            select: { status: true }, // Solo necesitamos el estado actual
         });
 
-        res.send(visit);
+        if (!visit) {
+            return res.status(404).send({ error: 'Visit not found' });
+        }
+
+        // Determinar el nuevo estado basado en el estado actual
+        let newStatus = '';
+        if (visit.status === 'pending') {
+            newStatus = 'in_progress';
+        } else if (visit.status === 'in_progress') {
+            newStatus = 'completed';
+        } else {
+            return res.status(400).send({ error: 'Invalid status transition' });
+        }
+
+        // Actualizar la visita con el nuevo estado
+        const updatedVisit = await prismaClient.visits.update({
+            where: { id: parseInt(id, 10) },
+            data: { 
+                status: newStatus,
+                updated_at: new Date()
+            },
+        });
+
+        res.send(updatedVisit);
     } catch (error) {
+        console.error(error); // Agregar esto para depurar el error
         res.status(400).send({ error: 'Error updating visit status' });
     }
 };
+
 
 
 export const contVisit = async (req, res) => {

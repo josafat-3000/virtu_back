@@ -8,7 +8,7 @@ import { roles } from '../utils/roles.js';
 const router = express.Router();
 
 // User routes
-router.post('/', authMiddleware, roleMiddleware([roles.USER]), createVisit);
+router.post('/', authMiddleware, roleMiddleware([roles.USER, roles.ADMIN, roles.SECURITY_GUARD]), createVisit);
 router.get('/', authMiddleware, roleMiddleware([roles.USER, roles.SECURITY_GUARD, roles.ADMIN]), getVisits);
 router.get('/count', authMiddleware, roleMiddleware([roles.SECURITY_GUARD, roles.ADMIN]), contVisit);
 router.get('/:id', authMiddleware, roleMiddleware([roles.USER, roles.SECURITY_GUARD, roles.ADMIN]), getVisitById);

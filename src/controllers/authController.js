@@ -16,7 +16,7 @@ export const register = async (req, res) => {
                 name,
                 email,
                 password: hashedPassword,
-                role_id,
+                role_id: 2,
             },
         });
 
@@ -28,7 +28,7 @@ export const register = async (req, res) => {
           maxAge: 3600000 // 1 hora
         });
     
-        res.status(201).json({ name: user.name, role: user.role_id, id: user.id });
+        res.status(201).json({name: user.name, role: user.role_id, id: user.id  });
     } catch (error) {
         res.status(400).send({ error: 'Error registering user', err: `${error}` });
         console.error(error);
@@ -52,7 +52,7 @@ export const loginUser = async (req, res) => {
       maxAge: 3600000 // 1 hora
     });
 
-    res.status(200).json({ name: user.name, role: user.role_id, id: user.id });
+    res.status(200).json({ name: user.name, role: user.role_id, id: user.id, email: user.email, phone: user.phone});
   } catch (error) {
     res.status(500).send('Server error');
     console.error(error);
