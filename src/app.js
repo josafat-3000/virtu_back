@@ -6,7 +6,7 @@ import accessLogsRoutes from './routes/accesLogRoutes.js';
 import uploadFilesRoutes from './routes/docsRoutes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import morgan from 'morgan';
+
 
 const app = express();
 
@@ -17,7 +17,7 @@ const corsOptions = {
     credentials: true, // Permite enviar cookies desde el frontend
     optionsSuccessStatus: 200
 };
-app.use(morgan('dev'))
+
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use('/api/v1/auth', authRoutes);
