@@ -19,12 +19,12 @@ export const getAllAccessLogs = async (req, res) => {
     }
 };
 
-export const getAllUserccessLogs = async (req, res) => {
+export const getUserAccessLogs = async (req, res) => {
     try {
-        const { userId } = rqe.params
-        const accessLogs = await prisma.accessLog.findMany({
+        const { userId } = req.params
+        const accessLogs = await prismaClient.accessLogs.findMany({
             where: {
-                user_id: userId,
+                user_id: parseInt(userId),
             },
         });
         res.json(accessLogs);
@@ -38,7 +38,7 @@ export const getAllUserccessLogs = async (req, res) => {
 export const getAccessLogById = async (req, res) => {
     try {
         const { id } = req.params;
-        const accessLog = await prisma.accessLog.findUnique({
+        const accessLog = await prismaClient.accessLog.findUnique({
             where: { id: parseInt(id) },
         });
         if (accessLog) {
@@ -55,7 +55,7 @@ export const getAccessLogById = async (req, res) => {
 export const createAccessLog = async (req, res) => {
     try {
         const { userId, accessType, timestamp, ipAddress, visitReason } = req.body;
-        const newAccessLog = await prisma.accessLog.create({
+        const newAccessLog = await prismaClient.accessLog.create({
             data: {
                 userId,
                 accessType,

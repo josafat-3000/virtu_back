@@ -28,9 +28,17 @@ export const createVisit = async (req, res) => {
 };
 
 export const getVisits = async (req, res) => {
+    
     try {
-        const visits = await prismaClient.visits.findMany();
-        res.send(visits);
+        if(req.user.role == 1){
+            const visits = await prismaClient.visits.findMany();
+            res.send(visits);
+        } else {
+            const visits = await prismaClient.visits.findMany({
+                where: { user_id: req.user.id },
+            });
+            res.send(visits);
+        }
     } catch (error) {
         res.status(500).send({ error: 'Error fetching visits' });
     }

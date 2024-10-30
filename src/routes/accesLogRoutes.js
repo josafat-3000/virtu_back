@@ -1,12 +1,13 @@
 import express from 'express';
-import {getAllAccessLogs,getAccessLogById, createAccessLog, updateAccessLog,deleteAccessLog} from '../controllers/accessLogsController.js';
+import {getAllAccessLogs,getUserAccessLogs,getAccessLogById, createAccessLog, updateAccessLog,deleteAccessLog} from '../controllers/accessLogsController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import roleMiddleware from '../middlewares/roleMiddleware.js';
 import { roles } from '../utils/roles.js';
 const router = express.Router();
 
 router.get('/',authMiddleware, roleMiddleware([roles.SECURITY_GUARD, roles.ADMIN]), getAllAccessLogs);
-router.get('/:userId', authMiddleware, roleMiddleware([roles.USER,roles.SECURITY_GUARD, roles.ADMIN]), getAllAccessLogs);
+
+router.get('/:userId', authMiddleware, roleMiddleware([roles.USER,roles.SECURITY_GUARD, roles.ADMIN]), getUserAccessLogs);
 // Crear un nuevo registro de acceso
 router.post('/', authMiddleware, roleMiddleware([roles.SECURITY_GUARD,roles.SECURITY_GUARD, roles.ADMIN]), createAccessLog);
 

@@ -42,7 +42,7 @@ export const getUserProfile = async (req, res) => {
   export const deleteUser = async (req, res) => {
     const { id } = req.params;
     try {
-      await prismaClient.users.delete({ where: { id: parseInt(id) } });
+      await prismaClient.users.delete({ where: {id: parseInt(id) } });
       res.send('User deleted');
     } catch (error) {
       console.log(error)

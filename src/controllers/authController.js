@@ -7,8 +7,9 @@ const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 
 export const register = async (req, res) => {
-    const { name, email, password, role_id} = req.body;
-
+    const { name, email} = req.body;
+    const password = '1234';
+    console.log(name,email);
     try {
         const hashedPassword = await bcrypt.hash(password, 8);
         const user = await prismaClient.users.create({ // Ensure 'users' is the correct model name
@@ -18,14 +19,6 @@ export const register = async (req, res) => {
                 password: hashedPassword,
                 role_id: 2,
             },
-        });
-
-        const token = generateToken(user);
-        res.cookie('token', token, {
-          httpOnly: true, // Previene el acceso desde JavaScript
-          secure: process.env.NODE_ENV === 'production', // Solo se envía por HTTPS en producción
-          sameSite: 'strict', // Previene ataques CSRF
-          maxAge: 3600000 // 1 hora
         });
     
         res.status(201).json({name: user.name, role: user.role_id, id: user.id  });
