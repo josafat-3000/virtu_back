@@ -1,0 +1,27 @@
+[33m4ed5bc4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: commit: restore
+[33m6783a1a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{1}: commit: Eliminar todos los archivos del repositorio
+[33m13452ce[m HEAD@{2}: commit: last
+[33m1218dc4[m HEAD@{3}: commit: node modules
+[33m773b539[m HEAD@{4}: commit: final 14/11/2024
+[33m10d87fd[m HEAD@{5}: commit: madrugada
+[33maac8ddd[m HEAD@{6}: Branch: renamed refs/heads/main to refs/heads/main
+[33maac8ddd[m HEAD@{8}: commit: 30/10
+[33mafc13b6[m HEAD@{9}: Branch: renamed refs/heads/main to refs/heads/main
+[33mafc13b6[m HEAD@{11}: commit: 12/09
+[33m7b02eec[m HEAD@{12}: commit: final 1209
+[33m4baea62[m HEAD@{13}: commit: 5:32 pm
+[33m663e14b[m HEAD@{14}: commit: 5:32 pm
+[33m59b7400[m HEAD@{15}: commit: 5:16 pm
+[33mf12ac7e[m HEAD@{16}: commit: 3:16 pm
+[33mcbe2f17[m HEAD@{17}: Branch: renamed refs/heads/main to refs/heads/main
+[33mcbe2f17[m HEAD@{19}: commit: 24/08/2024 12:59 pm
+[33m69e3236[m HEAD@{20}: Branch: renamed refs/heads/main to refs/heads/main
+[33m69e3236[m HEAD@{22}: commit: 24/08/2024 12:24 pm
+[33m0c0c0b1[m HEAD@{23}: Branch: renamed refs/heads/main to refs/heads/main
+[33m0c0c0b1[m HEAD@{25}: commit: 24/08/2024 2:46 am
+[33m6ab6ad4[m HEAD@{26}: Branch: renamed refs/heads/main to refs/heads/main
+[33m6ab6ad4[m HEAD@{28}: commit: 19/08/2024 5:18 PM
+[33me1b04b0[m HEAD@{29}: pull origin main: Fast-forward
+[33mbf53368[m HEAD@{30}: Branch: renamed refs/heads/main to refs/heads/main
+[33mbf53368[m HEAD@{32}: commit: 14/08/2024 5:23 pm
+[33m8f85d52[m HEAD@{33}: clone: from https://github.com/josafat-3000/virtu_back.git
