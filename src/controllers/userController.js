@@ -10,6 +10,7 @@ export const getUserProfile = async (req, res) => {
       const user = await prismaClient.users.findUnique({ where: { id } });
       res.json(user);
     } catch (error) {
+      console.error(error)
       res.status(500).send('Server error');
     }
   };

@@ -25,14 +25,15 @@ export const createNotification = async (req, res) => {
 
 // Get all notifications for a user
 export const getNotifications = async (req, res) => {
+    const user_id = req.user.id; // Assume user ID is available from authentication middleware
     try {
         const notifications = await prismaClient.notifications.findMany({
-            where: { user_id: req.user.id },
-            include: { visit: true }, // Include visit details if needed
+            where: { user_id: user_id },
         });
 
         res.send(notifications);
     } catch (error) {
+        console.log(error)
         res.status(500).send({ error: 'Error fetching notifications' });
     }
 };
