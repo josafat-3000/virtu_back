@@ -10,6 +10,10 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const app = express();
 
 app.use(express.json());
@@ -25,12 +29,12 @@ const server = http.createServer(app);
 // Configuramos Socket.io para usar el servidor HTTP
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',  // El puerto donde corre tu cliente
+    origin: process.env.FRONTEND_URL,  // El puerto donde corre tu cliente
     methods: ['GET', 'POST', 'PUT'], // Métodos permitidos
     credentials: true,
   },
 });
-
+console.log(process.env.FRONTEND_URL)
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use('/api/v1/auth', authRoutes);
