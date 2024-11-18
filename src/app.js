@@ -29,6 +29,7 @@ const server = http.createServer(app);
 // Configuramos Socket.io para usar el servidor HTTP
 const io = new Server(server, {
   cors: {
+    path: "/socket.io",
     origin: process.env.FRONTEND_URL,  // El puerto donde corre tu cliente
     methods: ['GET', 'POST', 'PUT'], // Métodos permitidos
     credentials: true,
