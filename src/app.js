@@ -35,6 +35,24 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+// Manejo de eventos de WebSocket
+io.on('connection', (socket) => {
+  console.log('Un cliente se ha conectado: ' + socket.id);
+
+  // Evento personalizado: escuchar 'mensaje' del cliente
+  socket.on('mensaje', (data) => {
+    console.log('Mensaje recibido: ', data);
+
+    // Emitir un evento de vuelta al cliente
+    socket.emit('respuesta', '¡Hola desde el servidor!');
+  });
+
+  // Manejar la desconexión del cliente
+  socket.on('disconnect', () => {
+    console.log('Un cliente se ha desconectado: ' + socket.id);
+  });
+});
+
 console.log(process.env.FRONTEND_URL)
 app.use(cookieParser());
 app.use(cors(corsOptions));
