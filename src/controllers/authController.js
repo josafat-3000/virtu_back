@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken'; // Ensure this import is present
 import prisma from '@prisma/client';
 import { generateToken } from '../utils/generateToken.js';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 

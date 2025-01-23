@@ -1,4 +1,6 @@
 import prisma from '@prisma/client';
+import sendEmail from '../utils/email.js';
+import { sendNotificationToUser } from './notificationController.js';
 
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
@@ -28,9 +30,9 @@ export const createVisit = async (req, res) => {
 };
 
 export const getVisits = async (req, res) => {
-    
+
     try {
-        if(req.user.role == 1){
+        if (req.user.role == 1) {
             const visits = await prismaClient.visits.findMany();
             res.send(visits);
         } else {
@@ -62,66 +64,72 @@ export const getVisitById = async (req, res) => {
     }
 };
 
-export const updateVisitStatus = async (req, res, io) => {
-  const { id } = req.params;
+export const updateVisitStatus = async (req, res) => {
+    const { id } = req.params;
 
-  try {
-    // Obtener la visita actual
-    const visit = await prismaClient.visits.findUnique({
-      where: { id: parseInt(id, 10) },
-    });
+    try {
+        const visit = await prismaClient.visits.findUnique({
+            where: { id: parseInt(id, 10) },
+        });
+        
+        const remitente = await prismaClient.users.findUnique({
+            where: { id: parseInt(visit.user_id, 10) }
+        })
+       
 
-    if (!visit) {
-      return res.status(404).send({ error: 'Visit not found' });
+        if (!visit) {
+            return res.status(404).send({ error: 'Visit not found' });
+        }
+
+        let newStatus = '';
+        if (visit.status === 'pending') {
+            newStatus = 'in_progress';
+        } else if (visit.status === 'in_progress') {
+            newStatus = 'completed';
+        } else {
+            return res.status(400).send({ error: 'Invalid status transition' });
+        }
+
+        const updatedVisit = await prismaClient.visits.update({
+            where: { id: parseInt(id, 10) },
+            data: {
+                status: newStatus,
+                updated_at: new Date(),
+            },
+        });
+        if (newStatus === 'completed') {
+            const message = `La visita con ID ${id} ha sido completada.`;
+            await prismaClient.notifications.create({
+              data: { visit_id: visit.id, user_id: visit.user_id, notification_type: 'check_out' },
+            });
+      
+            // Enviar la notificación a través de SSE
+            sendNotificationToUser(remitente.id, message);
+          } else if (newStatus === 'in_progress') {
+            const message = `La visita con ID ${id} ha ingresado.`;
+            await prismaClient.notifications.create({
+              data: { visit_id: visit.id, user_id: visit.user_id, notification_type: 'check_in' },
+            });
+      
+            // Enviar la notificación a través de SSE
+            sendNotificationToUser(remitente.id, message);
+          }
+
+        
+        const subject = `Notificación de Visita `;
+        const text = `La visita con ID ${visit.id} ha registrado el evento: ${newStatus}.`;
+        const html = `
+        <p><strong>Notificación de Visita</strong></p>
+        <p>La visita con ID <strong>${visit.id}</strong> ha registrado el evento: <strong>${newStatus}</strong>.</p>
+        `;
+
+        const recipientEmail = remitente.email; // Cambia a la dirección del destinatario
+        sendEmail(recipientEmail, subject, text, html);
+        res.send(updatedVisit);
+    } catch (error) {
+        console.error(error);
+        res.status(400).send({ error: 'Error updating visit status' });
     }
-    console.log(visit)
-    // Determinar el nuevo estado basado en el estado actual
-    let newStatus = '';
-    if (visit.status === 'pending') {
-      newStatus = 'in_progress';
-    } else if (visit.status === 'in_progress') {
-      newStatus = 'completed';
-    } else {
-      return res.status(400).send({ error: 'Invalid status transition' });
-    }
-
-    // Actualizar la visita con el nuevo estado
-    const updatedVisit = await prismaClient.visits.update({
-      where: { id: parseInt(id, 10) },
-      data: { 
-        status: newStatus,
-        updated_at: new Date()
-      },
-    });
-
-    // Crear la notificación si el estado es 'completed'
-    if (newStatus === 'completed'){
-      const message = `La visita con ID ${id} ha sido completada.`;
-      // Puedes guardar la notificación en la base de datos si es necesario
-      await prismaClient.notifications.create({
-        data: { visit_id:visit.id,user_id:visit.user_id,notification_type:'check_out'},
-      });
-
-      // Emitir la notificación en tiempo real usando Socket.IO
-      io.emit('notification', message);
-    } else if ( newStatus === 'in_progress') {
-      const message = `La visita con ID ${id} ha ingresado`;
-      // Puedes guardar la notificación en la base de datos si es necesario
-      await prismaClient.notifications.create({
-        data: { visit_id:visit.id,user_id:visit.user_id,notification_type:'check_in'},
-      });
-
-      // Emitir la notificación en tiempo real usando Socket.IO
-      io.emit('notification', message);
-    }
-
-    // Responder con el estado actualizado de la visita
-    res.send(updatedVisit);
-
-  } catch (error) {
-    console.error(error); // Agregar esto para depurar el error
-    res.status(400).send({ error: 'Error updating visit status' });
-  }
 };
 
 

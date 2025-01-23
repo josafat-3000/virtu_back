@@ -1,5 +1,6 @@
 import prisma from '@prisma/client';
 
+
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 
@@ -75,3 +76,33 @@ export const updateNotificationStatus = async (req, res) => {
     }
 };
 
+let clients = {}; // Usamos un objeto para almacenar conexiones por user_id
+
+export const sseHandler = (req, res) => {
+    const user_id = req.user.id; // Asume que el user_id está disponible en la solicitud
+
+    // Configurar las cabeceras SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+
+    // Almacenar la conexión en el objeto de clientes por user_id
+    clients[user_id] = res;
+
+    // Limpiar la conexión cuando se cierra
+    req.on('close', () => {
+        delete clients[user_id];
+    });
+};
+
+// Función para enviar notificaciones a un cliente específico
+export const sendNotificationToUser = (user_id, notification) => {
+    const client = clients[user_id];
+
+    if (client) {
+        client.write(`data: ${JSON.stringify(notification)}\n\n`);
+    } else {
+        console.log(`No hay cliente conectado con user_id: ${user_id}`);
+    }
+};

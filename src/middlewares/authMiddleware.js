@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import prisma from '@prisma/client';
+import dotenv from 'dotenv';
 
+dotenv.config();
 
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
