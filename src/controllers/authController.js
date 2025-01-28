@@ -1,3 +1,4 @@
+// src/controllers/authController.js
 import bcrypt from 'bcryptjs';
 import prisma from '@prisma/client';
 import { generateToken } from '../utils/generateToken.js';
@@ -53,7 +54,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// src/controllers/authController.js
+
 export const logoutUser = (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
@@ -63,3 +64,40 @@ export const logoutUser = (req, res) => {
   });
   res.status(200).send('Logout successful');
 };
+
+export const forgotPasswrod = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await prismaClient.users.findUnique({where: { email }});
+    if (!user) {
+      return res.send({ Status: "El usuario no existe" });
+    }
+    const token = jwt.sign({ id: user.id, username: user.name }, TOKEN_SECRET, { expiresIn: "10m" });
+    res.cookie("token", token);
+    // Enviar el email
+    const template = forgotTemplate(user.username,user._id,token);
+    await sendEmail(email, "CAMBIO DE CONTRASEÑA", template );
+    return res.send({ Status: "Success" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({ Status: "Error" });
+  }
+}
+
+export const forgotHandler = async (req,res) =>{
+  const {id, token} = req.params
+    const {password} = req.body
+  try {
+    const decoded = await jwt.verify(token, TOKEN_SECRET);
+    if (decoded) {
+      const hash = await bcrypt.hash(password, 10);
+      await User.findByIdAndUpdate({ _id: id }, { password: hash });
+      return res.send({ Status: "Success" });
+    } else {
+      return res.json({ Status: "Error with token" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.send({ Status: "Error" });
+  }
+}

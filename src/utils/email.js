@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
       },
     });
 
- const sendEmail = async (to, subject, text, html) => {
+ export const sendEmail = async (to, subject, text, html) => {
       try {
         await transporter.sendMail({
           from: `"Notificaciones" <${process.env.GMAIL_USER}>`,
@@ -27,4 +27,29 @@ const transporter = nodemailer.createTransport({
       }
     };
 
-    export default sendEmail;
+    export const confirmTemplate = (name, token) => {
+      return `
+        <div id="email___content">
+            
+            <h2>Hola ${ name }</h2>
+            <p>Para confirmar tu cuenta, ingresa al siguiente enlace</p>
+            <a
+                href="${process.env.FRONTEND_URL}/confirm/${ token }"
+                target="_blank"
+            >Confirmar Cuenta</a>
+        </div>
+      `;
+    }
+    export const forgotTemplate = (name,id, token) => {
+      return `
+        <div id="email___content">
+            
+            <h2>Hola ${ name }</h2>
+            <p>Para cambiar tu contraseña, ingresa al siguiente enlace</p>
+            <a
+                href="${process.env.FRONTEND_URL}/forgot/${id}/${ token }"
+                target="_blank"
+            >Cambiar contraseña</a>
+        </div>
+      `;
+    }
