@@ -18,12 +18,11 @@ const app = express();
 app.use(express.json());
 // Configurar CORS
 const corsOptions = {
-    origin: "*", // Reemplaza con el dominio de tu frontend
+    origin: process.env.FRONTEND_URL, // Reemplaza con el dominio de tu frontend
     credentials: true, // Permite enviar cookies desde el frontend
     optionsSuccessStatus: 200
 };
 
-console.log(process.env.FRONTEND_URL)
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use('/api/v1/auth', authRoutes);
