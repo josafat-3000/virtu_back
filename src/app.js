@@ -22,7 +22,7 @@ const corsOptions = {
     credentials: true, // Permite enviar cookies desde el frontend
     optionsSuccessStatus: 200
 };
-
+//dmcpasmcxpasgit 
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use('/api/v1/auth', authRoutes);
