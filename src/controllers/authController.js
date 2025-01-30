@@ -72,12 +72,12 @@ export const forgotPasswrod = async (req, res) => {
     if (!user) {
       return res.send({ Status: "El usuario no existe" });
     }
-    const token = jwt.sign({ id: user.id, username: user.name }, TOKEN_SECRET, { expiresIn: "10m" });
+    const token = jwt.sign({ id: user.id, username: user.name }, JWT_SECRET, { expiresIn: "10m" });
     res.cookie("token", token);
     // Enviar el email
-    const template = forgotTemplate(user.username,user._id,token);
+    const template = forgotTemplate(user.name,user.id,token);
     await sendEmail(email, "CAMBIO DE CONTRASEÑA", template );
-    return res.send({ Status: "Success" });
+    return res.send({ Status: "Cambio de contraseña exitoso" });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ Status: "Error" });
@@ -88,10 +88,10 @@ export const forgotHandler = async (req,res) =>{
   const {id, token} = req.params
     const {password} = req.body
   try {
-    const decoded = await jwt.verify(token, TOKEN_SECRET);
+    const decoded = await jwt.verify(token, JWT_SECRET);
     if (decoded) {
       const hash = await bcrypt.hash(password, 10);
-      await User.findByIdAndUpdate({ _id: id }, { password: hash });
+      await prismaClient.users.update({where: { id }, data: { password: hash }});
       return res.send({ Status: "Success" });
     } else {
       return res.json({ Status: "Error with token" });
