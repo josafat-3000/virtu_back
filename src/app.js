@@ -25,7 +25,7 @@ const corsOptions = {
 
 console.log(process.env.FRONTEND_URL)
 app.use(cookieParser());
-app.use(cors(corsOptions));
+app.use(cors());
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/visits', visitRoutes);
