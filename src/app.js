@@ -25,6 +25,21 @@ const corsOptions = {
 //dmcpasmcxpasgit 
 app.use(cookieParser());
 app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+    console.log("Nueva solicitud recibida:");
+    console.log(`Método: ${req.method}`);
+    console.log(`URL: ${req.originalUrl}`);
+    console.log("Headers:", req.headers);
+    
+    if (Object.keys(req.body).length) {
+      console.log("Cuerpo:", req.body);
+    }
+  
+    console.log("------------------------------------------------");
+    next(); // Pasar al siguiente middleware o ruta
+  });
+  
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/visits', visitRoutes);

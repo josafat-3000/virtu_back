@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import prisma from '@prisma/client';
 import { generateToken } from '../utils/generateToken.js';
 import dotenv from 'dotenv';
+import { sendEmail,forgotTemplate } from '../utils/email.js';
 
 dotenv.config();
 const { PrismaClient } = prisma;
@@ -72,7 +73,7 @@ export const forgotPasswrod = async (req, res) => {
     if (!user) {
       return res.send({ Status: "El usuario no existe" });
     }
-    const token = jwt.sign({ id: user.id, username: user.name }, JWT_SECRET, { expiresIn: "10m" });
+    const token = generateToken(user);
     res.cookie("token", token);
     // Enviar el email
     const template = forgotTemplate(user.name,user.id,token);
