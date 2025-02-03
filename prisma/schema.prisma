@@ -77,7 +77,7 @@ model users {
   role_id              Int?
   name                 String    @db.VarChar(100)
   email                String    @unique(map: "email") @db.VarChar(100)
-  password             String    @db.VarChar(100)
+  password             String?   @db.VarChar(255)
   phone                String?   @db.VarChar(20)
   email_verified       Boolean?  @default(false)
   login_attempts       Int?      @default(0)

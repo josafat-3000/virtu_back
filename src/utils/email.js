@@ -20,7 +20,6 @@ export const sendEmail = async (to, subject, html) => {
       subject,
       html,
     });
-    console.log('Correo enviado exitosamente a:', to);
   } catch (error) {
     console.error('Error al enviar el correo:', error);
   }
@@ -31,7 +30,7 @@ export const confirmTemplate = (name, token) => {
         <div id="email___content">
             
             <h2>Hola ${name}</h2>
-            <p>Para confirmar tu cuenta, ingresa al siguiente enlace</p>
+            <p>Para confirmar tu cuenta y crear tu contraseña, ingresa al siguiente enlace</p>
             <a
                 href="${process.env.FRONTEND_URL}/confirm/${token}"
                 target="_blank"
@@ -39,14 +38,14 @@ export const confirmTemplate = (name, token) => {
         </div>
       `;
 }
-export const forgotTemplate = (name, id, token) => {
+export const forgotTemplate = (name, token) => {
   return `
         <div id="email___content">
             
             <h2>Hola ${name}</h2>
             <p>Para cambiar tu contraseña, ingresa al siguiente enlace</p>
             <a
-                href="${process.env.FRONTEND_URL}/forgot/${id}/${token}"
+                href="${process.env.FRONTEND_URL}/reset/${token}"
                 target="_blank"
             >Cambiar contraseña</a>
         </div>

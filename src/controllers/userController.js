@@ -5,7 +5,6 @@ const prismaClient = new PrismaClient();
 
 export const getUserProfile = async (req, res) => {
     const { id } = req.user;
-    console.log(req.user)
     try {
       const user = await prismaClient.users.findUnique({ where: { id } });
       res.json(user);
