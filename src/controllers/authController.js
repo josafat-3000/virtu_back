@@ -48,6 +48,65 @@ export const register = async (req, res) => {
   }
 };
 
+export const registerBulk = async (req, res) => {
+  const usersData = req.body; // [{ name, email }, { name, email }]
+
+  try {
+    if (!Array.isArray(usersData) || usersData.length === 0) {
+      return res.status(400).json({ error: "Se requiere un array de usuarios" });
+    }
+
+    // Obtener los emails de los usuarios a registrar
+    const emails = usersData.map(user => user.email);
+
+    // Buscar si existen usuarios con esos emails
+    const existingUsers = await prismaClient.users.findMany({
+      where: { email: { in: emails } },
+      select: { email: true },
+    });
+
+    const existingEmails = new Set(existingUsers.map(user => user.email));
+
+    // Filtrar solo los usuarios que NO están registrados
+    const newUsers = usersData.filter(user => !existingEmails.has(user.email));
+
+    if (newUsers.length === 0) {
+      return res.status(400).json({ error: "Todos los usuarios ya están registrados" });
+    }
+
+    // Registrar usuarios individualmente usando Promise.all()
+    const createdUsers = await Promise.all(
+      newUsers.map(async (user) => {
+        return await prismaClient.users.create({
+          data: {
+            name: user.name,
+            email: user.email,
+            role_id: user.role_id, // Asignar rol por defecto
+          },
+        });
+      })
+    );
+    
+    // Enviar correos de confirmación con token
+    await Promise.all(
+      createdUsers.map(async (user) => {
+        const token = generateToken(user);
+        const template = confirmTemplate(user.name, token);
+        await sendEmail(user.email, "CONFIRMACIÓN DE TU CUENTA VIRTU", template);
+      })
+    );
+
+    res.status(201).json({
+      message: "Usuarios registrados exitosamente",
+      users: createdUsers, // Devuelve los usuarios creados con ID, nombre y rol
+    });
+
+  } catch (error) {
+    console.error("Error en el registro masivo:", error);
+    res.status(500).json({ error: "Error en el registro masivo", details: error.message });
+  }
+};
+
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;

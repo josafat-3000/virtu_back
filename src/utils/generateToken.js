@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 // Generate JWT token
 export const generateToken = (user) => {
+  console.log("user",user)
   return jwt.sign(
     { id:user.id, role: user.role_id}, 
     process.env.JWT_SECRET,
