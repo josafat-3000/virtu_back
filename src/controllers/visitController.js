@@ -32,7 +32,7 @@ export const createVisit = async (req, res) => {
 export const getVisits = async (req, res) => {
 
     try {
-        if (req.user.role == 1) {
+        if (req.user.role != 2) {
             const visits = await prismaClient.visits.findMany();
             res.send(visits);
         } else {
