@@ -115,7 +115,7 @@ export const updateVisitStatus = async (req, res) => {
             sendNotificationToUser(remitente.id, message);
         }
 
-
+        const state = newStatus=='in_progress'?'Registro de ingreso':'Registro de salida'
         const subject = `Notificación de Visita `;
         const html = `
         <!DOCTYPE html>
@@ -163,7 +163,7 @@ export const updateVisitStatus = async (req, res) => {
           <div class="container">
             <div class="header">Notificación de Visita</div>
             <div class="content">
-              <p>La visita con ID <strong>${visit.id}</strong> ha registrado el evento: <strong>${newStatus}</strong>.</p>
+              <p> <strong>${visit.visitor_name}</strong> ha registrado el evento: <strong>${state}</strong>.</p>
             </div>
             <div class="footer">
               <p>&copy; ${new Date().getFullYear()} Virtu</p>
