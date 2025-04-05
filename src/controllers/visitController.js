@@ -29,6 +29,24 @@ export const createVisit = async (req, res) => {
     }
 };
 
+export const updateVisit = async (req, res) => {
+    const { id } = req.params;
+    const dataToUpdate = req.body; // Solo actualizar lo que se envía
+    console.log(dataToUpdate)
+    try {
+        const visit = await prismaClient.visits.update({
+            where: { id: parseInt(id) }, // Asegurar que sea un número
+            data: dataToUpdate, // Solo los campos proporcionados
+        });
+
+        res.status(200).send(visit);
+    } catch (error) {
+        console.log(error)
+        res.status(400).send({ error: 'Error updating visit' });
+    }
+};
+
+
 export const getVisits = async (req, res) => {
 
     try {
