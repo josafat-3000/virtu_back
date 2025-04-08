@@ -4,7 +4,7 @@ import { verifyResetToken } from '../middlewares/resetTokenMiddelware.js.js';
 import roleMiddleware from '../middlewares/roleMiddleware.js'
 const router = express.Router();
 
-router.post('/register', roleMiddleware([1]) ,register);
+router.post('/register',register);
 router.post('/register/bulk',roleMiddleware([1]), registerBulk);
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);

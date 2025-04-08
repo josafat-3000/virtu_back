@@ -1,13 +1,14 @@
 import prisma from '@prisma/client';
 import { sendEmail } from '../utils/email.js';
 import { sendNotificationToUser } from './notificationController.js';
+import { generateInviteToken } from '../utils/generateToken.js'
+import jwt from 'jsonwebtoken';
 
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 
 export const createVisit = async (req, res) => {
     const { visitor_name, visitor_company, visit_reason, visit_material, vehicle, vehicle_model, vehicle_plate, status } = req.body;
-
     try {
         const visit = await prismaClient.visits.create({
             data: {
@@ -26,6 +27,86 @@ export const createVisit = async (req, res) => {
         res.status(201).send(visit);
     } catch (error) {
         res.status(400).send({ error: 'Error creating visit' });
+    }
+};
+export const createVisitFromLink = async (req, res) => {
+    const { 
+        values,
+        token 
+    } = req.body;
+
+    const {
+        visitor_name, 
+        visitor_company, 
+        visit_reason, 
+        visit_material, 
+        vehicle, 
+        vehicle_model, 
+        vehicle_plate, 
+        status
+    } = values;
+    // 1. Validación del token primero
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+        return res.status(401).json({ 
+            success: false,
+            error: 'Token inválido o expirado',
+            details: e.message 
+        });
+    }
+
+    // 2. Validación de campos requeridos
+    if (!visitor_name) {
+        return res.status(400).json({
+            success: false,
+            error: 'El nombre del visitante es requerido'
+        });
+    }
+
+    // 3. Creación de la visita
+    try {
+        const visit = await prismaClient.visits.create({
+            data: {
+                visitor_name,
+                visitor_company,
+                visit_reason,
+                visit_material,
+                vehicle: vehicle || false, // Valor por defecto
+                vehicle_model: vehicle ? vehicle_model : null,
+                vehicle_plate: vehicle ? vehicle_plate : null,
+                status: status || 'pending', // Valor por defecto
+                user_id: decoded.id, // Asegúrate de usar decoded.id
+            },
+        });
+
+        // 4. Respuesta exitosa
+        return res.status(201).json({
+            success: true,
+            data: {
+                visit,
+                token // Opcional: devolver el mismo token o uno nuevo
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating visit:', error);
+        
+        // 5. Manejo de errores específicos de Prisma
+        if (error.code === 'P2002') {
+            return res.status(400).json({
+                success: false,
+                error: 'Conflicto de datos únicos',
+                details: error.meta
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            error: 'Error interno al crear la visita',
+            details: error.message
+        });
     }
 };
 
@@ -133,7 +214,7 @@ export const updateVisitStatus = async (req, res) => {
             sendNotificationToUser(remitente.id, message);
         }
 
-        const state = newStatus=='in_progress'?'Registro de ingreso':'Registro de salida'
+        const state = newStatus == 'in_progress' ? 'Registro de ingreso' : 'Registro de salida'
         const subject = `Notificación de Visita `;
         const html = `
         <!DOCTYPE html>
@@ -202,7 +283,6 @@ export const updateVisitStatus = async (req, res) => {
 };
 
 
-
 export const contVisit = async (req, res) => {
     try {
         // Realizamos la consulta a la base de datos
@@ -232,3 +312,14 @@ export const contVisit = async (req, res) => {
         res.status(500).json({ error: 'Error fetching visit counts', err: error });
     }
 };
+
+export const linkVisit = async (req, res) => {
+    try {
+        const id = req.user.id;
+        const token = generateInviteToken(id);
+        res.send({ link: `${token}` });
+    } catch (error) {
+        console.error('[generateInviteUrlController]', error);
+        return res.status(500).json({ message: 'Error al generar la URL de acceso' });
+    }
+}
