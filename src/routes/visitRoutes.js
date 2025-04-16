@@ -13,8 +13,8 @@ const router = express.Router();
   router.get('/link',authMiddleware,roleMiddleware([roles.USER, roles.ADMIN, roles.SECURITY_GUARD]), linkVisit)
   router.get('/count', authMiddleware, roleMiddleware([roles.SECURITY_GUARD, roles.ADMIN]), contVisit);
   router.get('/:id', authMiddleware, roleMiddleware([roles.USER, roles.SECURITY_GUARD, roles.ADMIN]), getVisitById);
-  router.patch('/:id', authMiddleware, roleMiddleware([roles.ADMIN, roles.USER]), updateVisit);
+  router.patch('/update/:id', authMiddleware, roleMiddleware([roles.ADMIN, roles.USER]), updateVisit);
   // Rutas para el administrador y el guardia de seguridad
   router.patch('/:id', authMiddleware, roleMiddleware([roles.ADMIN, roles.SECURITY_GUARD]), updateVisitStatus);
-  router.patch('/:id', authMiddleware, roleMiddleware([roles.ADMIN, roles.SECURITY_GUARD]), updateVisitStatus);
+
 export default router;

@@ -164,6 +164,7 @@ export const getVisitById = async (req, res) => {
 };
 
 export const updateVisitStatus = async (req, res) => {
+    console.log("entra update")
     const { id } = req.params;
 
     try {
