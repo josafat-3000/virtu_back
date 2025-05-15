@@ -109,6 +109,7 @@ model users {
   notifications       notifications[]
   sessiontokens       sessiontokens[]
   visits              visits[]
+  uploadLinks          uploadLink[] 
 
   @@index([email], map: "email_2")
   @@index([role_id], map: "role_id")
@@ -137,6 +138,18 @@ model visits {
   @@index([user_id], map: "user_id")
   @@index([visit_date], map: "visit_date")
 }
+
+model uploadLink {
+  id           String   @id @default(uuid())
+  createdById  Int
+  createdBy    users     @relation(fields: [createdById], references: [id])
+  used         Boolean  @default(false)
+  filePath     String?
+  validated   Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
 
 enum accesslogs_access_type {
   check_in  @map("check-in")

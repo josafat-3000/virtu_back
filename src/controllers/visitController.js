@@ -1,8 +1,11 @@
 import prisma from '@prisma/client';
 import { sendEmail } from '../utils/email.js';
 import { sendNotificationToUser } from './notificationController.js';
-import { generateInviteToken } from '../utils/generateToken.js'
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+
 
 const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
@@ -30,19 +33,19 @@ export const createVisit = async (req, res) => {
     }
 };
 export const createVisitFromLink = async (req, res) => {
-    const { 
+    const {
         values,
-        token 
+        token
     } = req.body;
 
     const {
-        visitor_name, 
-        visitor_company, 
-        visit_reason, 
-        visit_material, 
-        vehicle, 
-        vehicle_model, 
-        vehicle_plate, 
+        visitor_name,
+        visitor_company,
+        visit_reason,
+        visit_material,
+        vehicle,
+        vehicle_model,
+        vehicle_plate,
         status
     } = values;
     // 1. Validación del token primero
@@ -50,10 +53,10 @@ export const createVisitFromLink = async (req, res) => {
     try {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (e) {
-        return res.status(401).json({ 
+        return res.status(401).json({
             success: false,
             error: 'Token inválido o expirado',
-            details: e.message 
+            details: e.message
         });
     }
 
@@ -92,7 +95,7 @@ export const createVisitFromLink = async (req, res) => {
 
     } catch (error) {
         console.error('Error creating visit:', error);
-        
+
         // 5. Manejo de errores específicos de Prisma
         if (error.code === 'P2002') {
             return res.status(400).json({
@@ -316,8 +319,15 @@ export const contVisit = async (req, res) => {
 
 export const linkVisit = async (req, res) => {
     try {
-        const id = req.user.id;
-        const token = generateInviteToken(id);
+        const user_id = req.user.id;
+        const token = uuidv4();
+        const request = await prismaClient.uploadLink.create({
+            data: {
+              id:token,
+              createdById: user_id,
+              expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+            },
+        });
         res.send({ link: `${token}` });
     } catch (error) {
         console.error('[generateInviteUrlController]', error);
