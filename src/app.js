@@ -18,9 +18,11 @@ const app = express();
 app.use(express.json());
 // Configurar CORS
 const corsOptions = {
-    origin: process.env.FRONTEND_URL, // Reemplaza con el dominio de tu frontend
-    credentials: true, // Permite enviar cookies desde el frontend
-    optionsSuccessStatus: 200
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200
 };
 //dmcpasmcxpasgit 
 app.use(cookieParser());
