@@ -24,6 +24,7 @@ export const createVisit = async (req, res) => {
                 vehicle_plate,
                 status,
                 user_id: req.user.id,
+                validated: true // Bandera inicializada como validada
             },
         });
 
@@ -32,12 +33,8 @@ export const createVisit = async (req, res) => {
         res.status(400).send({ error: 'Error creating visit' });
     }
 };
-export const createVisitFromLink = async (req, res) => {
-    const {
-        values,
-        token
-    } = req.body;
 
+export const createVisitFromLink = async (req, res) => {
     const {
         visitor_name,
         visitor_company,
@@ -46,20 +43,9 @@ export const createVisitFromLink = async (req, res) => {
         vehicle,
         vehicle_model,
         vehicle_plate,
-        status
-    } = values;
-    // 1. Validación del token primero
-    let decoded;
-    try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (e) {
-        return res.status(401).json({
-            success: false,
-            error: 'Token inválido o expirado',
-            details: e.message
-        });
-    }
-
+        status,
+        token
+    } = req.body;
     // 2. Validación de campos requeridos
     if (!visitor_name) {
         return res.status(400).json({
@@ -68,35 +54,63 @@ export const createVisitFromLink = async (req, res) => {
         });
     }
 
-    // 3. Creación de la visita
+    let decoded;
     try {
+        // 1. Verificar el token    
+        decoded = await prismaClient.uploadLink.findUnique({
+            where: { id: token },
+        });
+        if (!decoded) {
+            return res.status(400).json({
+                success: false,
+                error: 'Token inválido'
+            });
+        }
+    }
+    catch (error) {
+        console.error('Error Id token not found:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error al buscar el token'
+        });
+    }
+
+    // 3. Creación de la visita y actualización del uploadLink para relacionarlos
+    try {
+        // Crear la visita
         const visit = await prismaClient.visits.create({
             data: {
                 visitor_name,
                 visitor_company,
                 visit_reason,
                 visit_material,
-                vehicle: vehicle || false, // Valor por defecto
+                vehicle: vehicle || false,
                 vehicle_model: vehicle ? vehicle_model : null,
                 vehicle_plate: vehicle ? vehicle_plate : null,
-                status: status || 'pending', // Valor por defecto
-                user_id: decoded.id, // Asegúrate de usar decoded.id
+                status: status || 'pending',
+                user_id: decoded.createdById,
             },
         });
 
-        // 4. Respuesta exitosa
+        // Relacionar el uploadLink con la visita creada
+        await prismaClient.uploadLink.update({
+            where: { id: token },
+            data: {
+                visitId: visit.id
+            }
+        });
+
         return res.status(201).json({
             success: true,
             data: {
                 visit,
-                token // Opcional: devolver el mismo token o uno nuevo
+                token
             }
         });
 
     } catch (error) {
         console.error('Error creating visit:', error);
 
-        // 5. Manejo de errores específicos de Prisma
         if (error.code === 'P2002') {
             return res.status(400).json({
                 success: false,
@@ -135,11 +149,13 @@ export const getVisits = async (req, res) => {
 
     try {
         if (req.user.role != 2) {
-            const visits = await prismaClient.visits.findMany();
+            const visits = await prismaClient.visits.findMany({
+                where: { validated: true } // Solo visitas validadas
+            });
             res.send(visits);
         } else {
             const visits = await prismaClient.visits.findMany({
-                where: { user_id: req.user.id },
+                where: { user_id: req.user.id, validated: true }, // Solo visitas validadas del usuario
             });
             res.send(visits);
         }
@@ -323,9 +339,9 @@ export const linkVisit = async (req, res) => {
         const token = uuidv4();
         const request = await prismaClient.uploadLink.create({
             data: {
-              id:token,
-              createdById: user_id,
-              expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+                id: token,
+                createdById: user_id,
+                expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
             },
         });
         res.send({ link: `${token}` });

@@ -3,6 +3,7 @@ import path from "path";
 import { PrismaClient } from "@prisma/client";
 import fs from 'fs';
 import fsPromise from 'fs/promises';
+import { v4 as uuidv4 } from 'uuid';
 const prisma = new PrismaClient();
 
 const storage = multer.diskStorage({
@@ -54,16 +55,31 @@ export const uploadFile = async (req, res) => {
         return res.status(400).json({ error: "Ambos archivos son obligatorios." });
       }
 
+      // Genera employeeNo automáticamente
+      const employeeNo = uuidv4();
+
+      // Recibe los datos del formulario
+      const { beginTime, endTime, visitId } = req.body;
+
       await prisma.uploadLink.update({
         where: { id: linkId },
         data: {
           used: true,
+          filePath: file1.path, // puedes guardar ambos paths si lo deseas
+          employeeNo,
+          beginTime: beginTime ? new Date(beginTime) : undefined,
+          endTime: endTime ? new Date(endTime) : undefined,
+          visitId: visitId ? Number(visitId) : undefined // Relaciona con la visita
         },
       });
-      console.log(req.files)
+
       return res.status(200).json({
-        message: 'Archivos subidos correctamente',
-        files: req.files // Aquí devolveremos información de los archivos subidos
+        message: 'Proceso completado con éxito.',
+        files: req.files,
+        employeeNo,
+        beginTime,
+        endTime,
+        visitId
       });
     });
   } catch (error) {
@@ -82,12 +98,19 @@ export const validateLink = async (req, res) => {
       return res.status(400).json({ error: "Link inválido o ya usado." });
     }
 
-    // Aquí puedes realizar acciones adicionales (como registrar evento, etc.)
-
+    // Marcar el link como usado
     await prisma.uploadLink.update({
       where: { id: linkId },
       data: { used: true },
     });
+
+    // Si el link está asociado a una visita, marcar la visita como validada
+    if (link.visitId) {
+      await prisma.visits.update({
+        where: { id: link.visitId },
+        data: { validated: true }
+      });
+    }
 
     res.status(200).json({ message: "Link validado correctamente." });
   } catch (error) {
@@ -115,8 +138,6 @@ export const cancelLink = async (req, res) => {
     res.status(500).json({ error: "Error al cancelar el link." });
   }
 };
-
-
 
 export const verifyToken = async (req, res) => {
   const { token } = req.params;  // Obtenemos el token desde los parámetros de la URL
@@ -149,9 +170,13 @@ export const urlUploads = async (req, res) =>{
   try {
     const uploads = await prisma.uploadLink.findMany({
       where: { createdById: req.user.id },
+      include: {
+        visit: true, // Incluye la relación con visitas si es necesario
+      },
     });
     res.json(uploads)
   } catch (error){
+    console.error(error);
     return res.status(500).json({message: "Error al obtener urls"})
   }
 }

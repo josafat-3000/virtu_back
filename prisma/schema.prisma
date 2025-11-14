@@ -15,8 +15,8 @@ model accesslogs {
   timestamp   DateTime?               @default(now()) @db.Timestamp(0)
   ip_address  String?                 @db.VarChar(45)
 
-  user        users?                  @relation(fields: [user_id], references: [id])
-  visit       visits?                 @relation(fields: [visit_id], references: [id])
+  user  users?  @relation(fields: [user_id], references: [id])
+  visit visits? @relation(fields: [visit_id], references: [id])
 
   @@index([user_id], map: "user_id")
   @@index([visit_id], map: "visit_id")
@@ -28,7 +28,7 @@ model auditlogs {
   action    String?   @db.VarChar(255)
   timestamp DateTime? @default(now()) @db.Timestamp(0)
 
-  user      users?    @relation(fields: [user_id], references: [id])
+  user users? @relation(fields: [user_id], references: [id])
 
   @@index([timestamp], map: "timestamp")
   @@index([user_id], map: "user_id")
@@ -42,7 +42,7 @@ model loginattempts {
   ip_address String?   @db.VarChar(45)
   user_agent String?   @db.Text
 
-  user       users?    @relation(fields: [user_id], references: [id])
+  user users? @relation(fields: [user_id], references: [id])
 
   @@index([timestamp], map: "timestamp")
   @@index([user_id], map: "user_id")
@@ -56,8 +56,8 @@ model notifications {
   sent_at           DateTime?                        @default(now()) @db.Timestamp(0)
   read_at           DateTime?                        @db.Timestamp(0)
 
-  user              users?                           @relation(fields: [user_id], references: [id])
-  visit             visits?                          @relation(fields: [visit_id], references: [id])
+  user  users?  @relation(fields: [user_id], references: [id])
+  visit visits? @relation(fields: [visit_id], references: [id])
 
   @@index([user_id], map: "user_id")
   @@index([visit_id], map: "visit_id")
@@ -80,7 +80,7 @@ model sessiontokens {
   last_used_at  DateTime? @db.Timestamp(0)
   created_at    DateTime? @default(now()) @db.Timestamp(0)
 
-  user          users?    @relation(fields: [user_id], references: [id])
+  user users? @relation(fields: [user_id], references: [id])
 
   @@index([device_id], map: "device_id")
   @@index([user_id], map: "user_id")
@@ -101,15 +101,15 @@ model users {
   created_by           Int?
   updated_by           Int?
 
-  role                 roles?    @relation(fields: [role_id], references: [id])
+  role roles? @relation(fields: [role_id], references: [id])
 
-  accesslogs          accesslogs[]
-  auditlogs           auditlogs[]
-  loginattempts       loginattempts[]
-  notifications       notifications[]
-  sessiontokens       sessiontokens[]
-  visits              visits[]
-  uploadLinks          uploadLink[] 
+  accesslogs    accesslogs[]
+  auditlogs     auditlogs[]
+  loginattempts loginattempts[]
+  notifications notifications[]
+  sessiontokens sessiontokens[]
+  visits        visits[]
+  uploadLinks   uploadLink[]
 
   @@index([email], map: "email_2")
   @@index([role_id], map: "role_id")
@@ -127,29 +127,34 @@ model visits {
   visit_date      DateTime?      @default(now()) @db.Timestamp(0)
   user_id         Int?
   status          visits_status? @default(pending)
+  validated       Boolean        @default(false) // <-- Nuevo campo
   created_at      DateTime?      @default(now()) @db.Timestamp(0)
   updated_at      DateTime?      @default(now()) @db.Timestamp(0)
 
   user            users?         @relation(fields: [user_id], references: [id])
-
   accesslogs      accesslogs[]
   notifications   notifications[]
+  uploadLinks     uploadLink[]
 
   @@index([user_id], map: "user_id")
   @@index([visit_date], map: "visit_date")
 }
 
 model uploadLink {
-  id           String   @id @default(uuid())
-  createdById  Int
-  createdBy    users     @relation(fields: [createdById], references: [id])
-  used         Boolean  @default(false)
-  filePath     String?
-  validated   Boolean  @default(false)
+  id          String    @id @default(uuid())
+  createdById Int
+  createdBy   users     @relation(fields: [createdById], references: [id])
+  used        Boolean   @default(false)
+  filePath    String?
+  validated   Boolean   @default(false)
   expiresAt   DateTime
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+  employeeNo  String?
+  beginTime   DateTime?
+  endTime     DateTime?
+  visitId     Int? // <-- Relación con visits
+  visit       visits?   @relation(fields: [visitId], references: [id])
 }
-
 
 enum accesslogs_access_type {
   check_in  @map("check-in")
