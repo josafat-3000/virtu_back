@@ -134,14 +134,16 @@ export const loginUser = async (req, res) => {
 
 
 export const logoutUser = (req, res) => {
+  // Aseguramos los mismos flags cross-site que en el login
   res.cookie('token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: true,           // obligatorio en producción HTTPS
+    sameSite: 'none',       // debe coincidir con el login para que el navegador borre la cookie
     maxAge: 0
   });
   res.status(200).send('Logout successful');
 };
+
 
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;

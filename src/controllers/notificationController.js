@@ -78,23 +78,31 @@ export const updateNotificationStatus = async (req, res) => {
 
 let clients = {}; // Usamos un objeto para almacenar conexiones por user_id
 
+// --- Reemplaza la función sseHandler existente por esta ---
 export const sseHandler = (req, res) => {
-    const user_id = req.user.id; // Asume que el user_id está disponible en la solicitud
+  // Si no quieres SSE en producción (Render/Cloudflare lo corta), corta la conexión
+  const allowSSE = process.env.ENABLE_SSE === 'true'; // controla por env
+  if (!allowSSE) {
+    // responder de forma segura para que el frontend no intente reconectar en bucle
+    return res.status(503).send({ error: 'SSE no disponible en este entorno. Usa polling o WebSocket.' });
+  }
 
-    // Configurar las cabeceras SSE
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
+  const user_id = req.user.id;
 
+  // Configurar cabeceras SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-    // Almacenar la conexión en el objeto de clientes por user_id
-    clients[user_id] = res;
+  // Almacenar la conexión en el objeto de clientes por user_id
+  clients[user_id] = res;
 
-    // Limpiar la conexión cuando se cierra
-    req.on('close', () => {
-        delete clients[user_id];
-    });
+  // Mantener la conexión abierta hasta que el cliente la cierre
+  req.on('close', () => {
+    delete clients[user_id];
+  });
 };
+
 
 // Función para enviar notificaciones a un cliente específico
 export const sendNotificationToUser = (user_id, notification) => {
