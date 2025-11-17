@@ -1,10 +1,1 @@
--- AlterTable
-CREATE TABLE uploadlink (
-  id VARCHAR(255) NOT NULL PRIMARY KEY,
-  createdById INT NOT NULL,
-  used BOOLEAN DEFAULT FALSE,
-  filePath VARCHAR(255),
-  validated BOOLEAN DEFAULT FALSE,
-  expiresAt DATETIME,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+SHOW TABLES LIKE 'UploadLink';

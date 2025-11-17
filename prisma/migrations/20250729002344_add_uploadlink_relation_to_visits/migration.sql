@@ -5,8 +5,7 @@
 
 */
 -- AlterTable
--- ALTER TABLE `uploadlink` DROP COLUMN `name`,
---     ADD COLUMN `visitId` INTEGER NULL;
+ALTER TABLE `UploadLink` ADD COLUMN `visitId` INTEGER NULL;
 
 -- AddForeignKey
-ALTER TABLE `uploadLink` ADD CONSTRAINT `uploadLink_visitId_fkey` FOREIGN KEY (`visitId`) REFERENCES `visits`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `UploadLink` ADD CONSTRAINT `uploadLink_visitId_fkey` FOREIGN KEY (`visitId`) REFERENCES `visits`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

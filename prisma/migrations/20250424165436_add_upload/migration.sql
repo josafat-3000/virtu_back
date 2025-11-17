@@ -6,6 +6,6 @@
 
 */
 -- AlterTable
-ALTER TABLE `uploadlink` DROP COLUMN `originalName`,
+ALTER TABLE `UploadLink` DROP COLUMN `originalName`,
     ADD COLUMN `expiresAt` DATETIME(3) NOT NULL,
     ADD COLUMN `validated` BOOLEAN NOT NULL DEFAULT false;

@@ -6,8 +6,8 @@
 
 */
 -- AlterTable
-ALTER TABLE `uploadlink` DROP COLUMN `createdBy`,
+ALTER TABLE `UploadLink` DROP COLUMN `createdBy`,
     ADD COLUMN `createdById` INTEGER NOT NULL;
 
 -- AddForeignKey
-ALTER TABLE `uploadLink` ADD CONSTRAINT `uploadLink_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `UploadLink` ADD CONSTRAINT `uploadLink_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
