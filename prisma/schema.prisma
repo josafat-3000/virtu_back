@@ -154,6 +154,8 @@ model uploadLink {
   endTime     DateTime?
   visitId     Int? // <-- Relación con visits
   visit       visits?   @relation(fields: [visitId], references: [id])
+  
+  @@map("UploadLink") 
 }
 
 enum accesslogs_access_type {
