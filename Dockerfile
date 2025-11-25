@@ -1,16 +1,26 @@
 FROM node:20-alpine
 
-WORKDIR /src
+# Set the working directory
+WORKDIR /app
 
-COPY package*.json ./
+# Copy only the necessary files for installation
+COPY package*.json ./ 
 COPY prisma ./prisma/
 
-RUN npm install
+# Install dependencies
+RUN npm install --production
 
+# Generate Prisma client
 RUN npx prisma generate
 
+# Copy the rest of the application
 COPY . .
 
+# Set environment variables
+ENV NODE_ENV=production
+
+# Expose the application port
 EXPOSE 3000
 
-CMD ["npm", "run", "build"]
+# Start the application
+CMD ["npm", "start"]
