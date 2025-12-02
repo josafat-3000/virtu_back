@@ -191,14 +191,23 @@ export const updateVisitStatus = async (req, res) => {
             where: { id: parseInt(id, 10) },
         });
 
+        if (!visit) {
+            return res.status(404).send({ error: 'Visit not found' });
+        }
+
+        // Extra validation: Check if the current time is within 15 minutes before or after the visit date-time
+        const currentTime = new Date();
+        const visitTime = new Date(visit.visit_date);
+        const timeDifference = Math.abs(currentTime - visitTime) / (1000 * 60); // Difference in minutes
+
+        if (timeDifference > 15) {
+            return res.status(400).send({ error: 'Visit cannot be validated outside the 30-minute range (15 minutes before or after the scheduled time).' });
+        }
+
         const remitente = await prismaClient.users.findUnique({
             where: { id: parseInt(visit.user_id, 10) }
         })
 
-
-        if (!visit) {
-            return res.status(404).send({ error: 'Visit not found' });
-        }
 
         let newStatus = '';
         if (visit.status === 'pending') {

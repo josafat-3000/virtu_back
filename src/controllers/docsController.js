@@ -90,18 +90,18 @@ export const uploadFile = async (req, res) => {
 
 export const validateLink = async (req, res) => {
   const { linkId } = req.params;
-
+  console.log("Validando linkId:", linkId);
   try {
     const link = await prisma.uploadLink.findUnique({ where: { id: linkId } });
 
-    if (!link || link.used) {
+    if (!link || link.validated) {
       return res.status(400).json({ error: "Link inválido o ya usado." });
     }
 
     // Marcar el link como usado
     await prisma.uploadLink.update({
       where: { id: linkId },
-      data: { used: true },
+      data: { validated: true },
     });
 
     // Si el link está asociado a una visita, marcar la visita como validada
