@@ -197,9 +197,12 @@ export const updateVisitStatus = async (req, res) => {
 
         // Extra validation: Check if the current time is within 15 minutes before or after the visit date-time
         const currentTime = new Date();
-        const visitTime = new Date(visit.visit_date);
-        const timeDifference = Math.abs(currentTime - visitTime) / (1000 * 60); // Difference in minutes
+        const visitTimeString = new Date(visit.visit_date).toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
+        const visitTime = new Date(visitTimeString);
+        console.log("visitTime", visitTime)
 
+        const timeDifference = Math.abs(currentTime - visitTime) / (1000 * 60); // Difference in minutes
+        console.log("timeDifference", timeDifference)
         if (timeDifference > 15) {
             return res.status(400).send({ error: 'Visit cannot be validated outside the 30-minute range (15 minutes before or after the scheduled time).' });
         }
