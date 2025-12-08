@@ -11,7 +11,7 @@ const { PrismaClient } = prisma;
 const prismaClient = new PrismaClient();
 
 export const createVisit = async (req, res) => {
-    const { visitor_name, visitor_company, visit_reason, visit_material, vehicle, vehicle_model, vehicle_plate, status } = req.body;
+    const { visitor_name, visitor_company, visit_reason, visit_material, visit_date,vehicle, vehicle_model, vehicle_plate, status } = req.body;
     try {
         const visit = await prismaClient.visits.create({
             data: {
@@ -20,6 +20,7 @@ export const createVisit = async (req, res) => {
                 visit_reason,
                 visit_material,
                 vehicle,
+                visit_date,
                 vehicle_model,
                 vehicle_plate,
                 status,
@@ -194,12 +195,17 @@ export const updateVisitStatus = async (req, res) => {
         if (!visit) {
             return res.status(404).send({ error: 'Visit not found' });
         }
+        if (visit.status === 'completed') {
+            console.log("ya esta completada")
+            return res.status(400).send({ error: 'Visit already completed' });
+        }
 
         // Extra validation: Check if the current time is within 15 minutes before or after the visit date-time
         const currentTime = new Date();
         const visitTimeString = new Date(visit.visit_date).toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
         const visitTime = new Date(visitTimeString);
-        console.log("visitTime", visitTime)
+        console.log("currentTime", currentTime.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+        console.log("visitTime", visitTime.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
 
         const timeDifference = Math.abs(currentTime - visitTime) / (1000 * 60); // Difference in minutes
         console.log("timeDifference", timeDifference)
