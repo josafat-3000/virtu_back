@@ -200,17 +200,26 @@ export const updateVisitStatus = async (req, res) => {
             return res.status(400).send({ error: 'Visit already completed' });
         }
 
-        // Extra validation: Check if the current time is within 15 minutes before or after the visit date-time
+        // Extra validation: Check if the current time is on the same day as the visit date
         const currentTime = new Date();
-        const visitTimeString = new Date(visit.visit_date).toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
-        const visitTime = new Date(visitTimeString);
-        console.log("currentTime", currentTime.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
-        console.log("visitTime", visitTime.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+        const currentDateString = currentTime.toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
+        const currentDate = new Date(currentDateString);
+        
+        const visitDateString = new Date(visit.visit_date).toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
+        const visitDate = new Date(visitDateString);
+        
+        console.log("currentTime", currentDate.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+        console.log("visitTime", visitDate.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
 
-        const timeDifference = Math.abs(currentTime - visitTime) / (1000 * 60); // Difference in minutes
-        console.log("timeDifference", timeDifference)
-        if (timeDifference > 15) {
-            return res.status(400).send({ error: 'Visit cannot be validated outside the 30-minute range (15 minutes before or after the scheduled time).' });
+        // Compare only the date parts (year, month, day)
+        const isSameDay = currentDate.getFullYear() === visitDate.getFullYear() &&
+                          currentDate.getMonth() === visitDate.getMonth() &&
+                          currentDate.getDate() === visitDate.getDate();
+        
+        console.log("isSameDay", isSameDay);
+        
+        if (!isSameDay) {
+            return res.status(400).send({ error: 'Visit can only be validated on the scheduled day.' });
         }
 
         const remitente = await prismaClient.users.findUnique({
