@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import fs from 'fs';
 import fsPromise from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
-import { sendDigestPost } from "../utils/digest.js";
+import { sendDigestPost, sendDigestPostFormData } from "../utils/digest.js";
 const prisma = new PrismaClient();
 
 const storage = multer.diskStorage({
@@ -56,31 +56,31 @@ export const uploadFile = async (req, res) => {
         return res.status(400).json({ error: "Ambos archivos son obligatorios." });
       }
 
-      // Genera employeeNo automáticamente
       const employeeNo = uuidv4();
-
-      // Recibe los datos del formulario
       const { beginTime, endTime, visitId } = req.body;
+
+      // filePath guarda solo la carpeta
+      const folderPath = path.join('uploads', linkId);
 
       await prisma.uploadLink.update({
         where: { id: linkId },
         data: {
           used: true,
-          filePath: file1.path, // puedes guardar ambos paths si lo deseas
+          filePath: folderPath,
           employeeNo,
           beginTime: beginTime ? new Date(beginTime) : undefined,
           endTime: endTime ? new Date(endTime) : undefined,
-          visitId: visitId ? Number(visitId) : undefined // Relaciona con la visita
+          visitId: visitId ? Number(visitId) : undefined
         },
       });
 
       return res.status(200).json({
         message: 'Proceso completado con éxito.',
-        files: req.files,
         employeeNo,
         beginTime,
         endTime,
-        visitId
+        visitId,
+        filesUploaded: 2
       });
     });
   } catch (error) {
@@ -116,6 +116,9 @@ export const validateLink = async (req, res) => {
       });
     }
 
+    let hikvisionUserResponse = null;
+    let hikvisionFaceResponse = null;
+
     // Crear usuario en Hikvision después de validar
     try {
       const employeeNo = link.employeeNo || `VIS-${link.visitId}`;
@@ -143,7 +146,7 @@ export const validateLink = async (req, res) => {
         ]
       };
 
-      await sendDigestPost({
+      hikvisionUserResponse = await sendDigestPost({
         username: process.env.HIKVISION_USERNAME,
         password: process.env.HIKVISION_PASSWORD,
         method: "POST",
@@ -153,13 +156,56 @@ export const validateLink = async (req, res) => {
       });
 
       console.log(`Usuario visitante ${employeeNo} creado en Hikvision exitosamente.`);
+
+      // Vincular foto (captura_2 es la cara/selfie)
+      try {
+        // Buscar archivos con patrón captura_2
+        const files = fs.readdirSync(link.filePath);
+        const faceFile = files.find(f => f.includes('captura_2'));
+
+        if (faceFile) {
+          const faceImagePath = path.join(link.filePath, faceFile);
+
+          if (fs.existsSync(faceImagePath)) {
+            const imageBuffer = fs.readFileSync(faceImagePath);
+            const imageName = faceFile;
+
+            const faceUri = `/ISAPI/Intelligent/FDLib/FaceDataRecord?format=json&devIndex=${process.env.HIKVISION_DEVICE_INDEX}`;
+            const faceUrl = process.env.HIKVISION_BASE_URL + faceUri;
+
+            const jsonData = {
+              employeeNo
+            };
+
+            hikvisionFaceResponse = await sendDigestPostFormData({
+              username: process.env.HIKVISION_USERNAME,
+              password: process.env.HIKVISION_PASSWORD,
+              method: "POST",
+              uri: faceUri,
+              url: faceUrl,
+              jsonData,
+              imageBuffer,
+              imageName
+            });
+
+            console.log(`Foto de rostro ${imageName} vinculada a ${employeeNo} exitosamente.`);
+          }
+        }
+      } catch (faceError) {
+        console.error("Error vinculando foto:", faceError.message);
+      }
+
     } catch (hikvisionError) {
-      console.error("Error creando usuario en Hikvision:", hikvisionError.message);
-      // No rechazamos la validación si Hikvision falla, solo registramos el error
+      console.error("Error en Hikvision:", hikvisionError.message);
     }
 
-    res.status(200).json({ message: "Link validado correctamente y usuario registrado en Hikvision." });
+    res.status(200).json({
+      message: "Link validado correctamente, usuario registrado en Hikvision.",
+      hikvisionUser: hikvisionUserResponse ? "Creado" : "Error o no disponible",
+      hikvisionFace: hikvisionFaceResponse ? "Vinculada" : "No vinculada"
+    });
   } catch (error) {
+    console.error("Error al validar:", error);
     res.status(500).json({ error: "Error al validar el link." });
   }
 };
