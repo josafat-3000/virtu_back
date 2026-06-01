@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import fs from 'fs';
 import fsPromise from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+import { sendDigestPost } from "../utils/digest.js";
 const prisma = new PrismaClient();
 
 const storage = multer.diskStorage({
@@ -92,13 +93,16 @@ export const validateLink = async (req, res) => {
   const { linkId } = req.params;
   console.log("Validando linkId:", linkId);
   try {
-    const link = await prisma.uploadLink.findUnique({ where: { id: linkId } });
+    const link = await prisma.uploadLink.findUnique({
+      where: { id: linkId },
+      include: { visit: true }
+    });
 
     if (!link || link.validated) {
       return res.status(400).json({ error: "Link inválido o ya usado." });
     }
 
-    // Marcar el link como usado
+    // Marcar el link como validado
     await prisma.uploadLink.update({
       where: { id: linkId },
       data: { validated: true },
@@ -112,7 +116,49 @@ export const validateLink = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "Link validado correctamente." });
+    // Crear usuario en Hikvision después de validar
+    try {
+      const employeeNo = link.employeeNo || `VIS-${link.visitId}`;
+      const name = link.visit?.visitor_name || "Visitante";
+      const beginTime = link.beginTime?.toISOString() || new Date().toISOString();
+      const endTime = link.endTime?.toISOString() || new Date(Date.now() + 24*60*60*1000).toISOString();
+
+      const uri = `/ISAPI/AccessControl/UserInfo/Record?format=json&devIndex=${process.env.HIKVISION_DEVICE_INDEX}`;
+      const url = process.env.HIKVISION_BASE_URL + uri;
+
+      const bodyData = {
+        UserInfo: [
+          {
+            employeeNo,
+            name,
+            userType: "visitor",
+            maxOpenDoorTime: 3,
+            Valid: {
+              enable: true,
+              beginTime,
+              endTime,
+              timeType: "local"
+            }
+          }
+        ]
+      };
+
+      await sendDigestPost({
+        username: process.env.HIKVISION_USERNAME,
+        password: process.env.HIKVISION_PASSWORD,
+        method: "POST",
+        uri,
+        url,
+        bodyData
+      });
+
+      console.log(`Usuario visitante ${employeeNo} creado en Hikvision exitosamente.`);
+    } catch (hikvisionError) {
+      console.error("Error creando usuario en Hikvision:", hikvisionError.message);
+      // No rechazamos la validación si Hikvision falla, solo registramos el error
+    }
+
+    res.status(200).json({ message: "Link validado correctamente y usuario registrado en Hikvision." });
   } catch (error) {
     res.status(500).json({ error: "Error al validar el link." });
   }
@@ -209,5 +255,86 @@ export const getAllImages = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(404).json({ message: 'Error al obtener las imágenes' });
+  }
+};
+
+export const createHikvisionUser = async (req, res) => {
+  try {
+    const { visitId } = req.body;
+
+    if (!visitId) {
+      return res.status(400).json({ error: "visitId es requerido." });
+    }
+
+    // Fetch visit and upload link data
+    const uploadLink = await prisma.uploadLink.findFirst({
+      where: { visitId: Number(visitId) },
+      include: { visit: true }
+    });
+
+    if (!uploadLink) {
+      return res.status(404).json({ error: "No se encontró el registro de carga para esta visita." });
+    }
+
+    if (!uploadLink.visit) {
+      return res.status(404).json({ error: "Visita no encontrada." });
+    }
+
+    const visit = uploadLink.visit;
+    const employeeNo = uploadLink.employeeNo || `VIS-${visitId}`;
+    const name = visit.visitor_name;
+    const beginTime = uploadLink.beginTime?.toISOString() || new Date().toISOString();
+    const endTime = uploadLink.endTime?.toISOString() || new Date(Date.now() + 24*60*60*1000).toISOString();
+
+    const uri = `/ISAPI/AccessControl/UserInfo/Record?format=json&devIndex=${process.env.HIKVISION_DEVICE_INDEX}`;
+    const url = process.env.HIKVISION_BASE_URL + uri;
+
+    const bodyData = {
+      UserInfo: [
+        {
+          employeeNo,
+          name,
+          userType: "visitor",
+          maxOpenDoorTime: 3,
+          Valid: {
+            enable: true,
+            beginTime,
+            endTime,
+            timeType: "local"
+          }
+        }
+      ]
+    };
+
+    const response = await sendDigestPost({
+      username: process.env.HIKVISION_USERNAME,
+      password: process.env.HIKVISION_PASSWORD,
+      method: "POST",
+      uri,
+      url,
+      bodyData
+    });
+
+    // Update uploadLink with Hikvision status
+    await prisma.uploadLink.update({
+      where: { id: uploadLink.id },
+      data: { validated: true }
+    });
+
+    res.status(200).json({
+      message: "Usuario visitante creado en Hikvision exitosamente.",
+      employeeNo,
+      name,
+      beginTime,
+      endTime,
+      hikvisionResponse: response
+    });
+
+  } catch (error) {
+    console.error("Error creando usuario visitante en Hikvision:", error);
+    res.status(500).json({
+      error: "Error al crear usuario visitante en Hikvision.",
+      details: error.message
+    });
   }
 };
